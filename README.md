@@ -1,4 +1,4 @@
-# NestJS Telegram Bot 
+# NodeJS Telegram Bot 
 
 Dear Candidate, 
 
