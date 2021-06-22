@@ -1,8 +1,8 @@
-# NodeJS Telegram Bot 
+# NestJS Telegram Bot 
 
 Dear Candidate, 
 
-We've prepared a simple test task for you where you can show all your knowledge and skills in the Angular area. Feel free to improvise and don't be afraid of challenges 👀. We all believe that you are full of 📚 knowledge and 💪 motivation.
+We've prepared a simple test task for you where you can show all your knowledge and skills in the NodeJS area. Feel free to improvise and don't be afraid of challenges 👀. We all believe that you are full of 📚 knowledge and 💪 motivation.
 
 Respectfully, ORIL team.
 
