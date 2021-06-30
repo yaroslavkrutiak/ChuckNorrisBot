@@ -1,0 +1,23 @@
+{
+  "name": "source",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yaroslavkrutiak/node-test-task.git"
+  },
+  "author": "Yaroslav Krutiak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yaroslavkrutiak/node-test-task/issues"
+  },
+  "homepage": "https://github.com/yaroslavkrutiak/node-test-task#readme",
+  "dependencies": {
+    "mongo": "^0.1.0",
+    "node-telegram-bot-api": "^0.53.0"
+  }
+}
