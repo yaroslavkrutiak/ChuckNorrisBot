@@ -5,10 +5,14 @@ This [bot](https://t.me/node_task_bot) manages to spread jokes about Chuck Norri
 ## Installation
 
 ```bash
+$ cd ./source/nest-bot-task
+
 $ npm install
 ```
 
 ## Running the app
+
+Don't forget to enter the working directory ```cd ./source/nest-bot-task```
 
 ```bash
 # development
