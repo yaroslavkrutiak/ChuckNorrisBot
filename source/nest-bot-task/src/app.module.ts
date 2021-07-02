@@ -5,7 +5,7 @@ import {AppService} from './app.service';
 import {History, HistorySchema} from "./schemas/history.schema";
 
 @Module({
-    imports: [MongooseModule.forRoot("mongodb+srv://user:userpass@cluster0.mxhim.mongodb.net/chuck_norris_history?retryWrites=true&w=majority"),
+    imports: [MongooseModule.forRoot(process.env.DB_CONNECTION_LINK),
         MongooseModule.forFeature([
             {name: History.name, schema: HistorySchema}
         ]),HttpModule],

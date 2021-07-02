@@ -3,20 +3,19 @@ import {InjectModel} from "@nestjs/mongoose";
 import {History, HistoryDocument} from "./schemas/history.schema";
 import {Model} from 'mongoose'
 import fetch from 'node-fetch'
+import * as dotenv from 'dotenv';
 
-const choose = 'Hello I\'m ChuckNorrisBot. I manage to spread jokes about Chuck.\n\nPress a button and have fun:\nRandom - for a random joke\nCategoties - to choose thematic of a joke\nHistory - for your recent jokes'
+dotenv.config()
 
 
 @Injectable()
 export class AppService {
 
-
     constructor(@InjectModel(History.name) private historyModel: Model<HistoryDocument>) {
-        process.env.NTBA_FIX_319 = '1'
         const TelegramBot = require('node-telegram-bot-api')
-        const token = '';
-        const bot = new TelegramBot(token, {polling: {interval: 300, autoStart: true, params: {timeout: 10}}});
-        // setTimeout(() => console.log(`Connect bot via https://t.me/node_task_bot`), 3000)
+        const token: string = process.env.TOKEN;
+        const bot = new TelegramBot(token, {polling: {autoStart: true}});
+        setTimeout(() => console.log(`Connect bot via ${process.env.BOT_LINK}`), 2000)
 
         bot.on('callback_query', query => {
             switch (query.data) {
@@ -33,111 +32,28 @@ export class AppService {
                     this.mainMenuChosen(bot, query)
                     break
                 default:
-                    this.categoryJoke(bot, query, historyModel, query.data)
+                    this.categoryJokeChosen(bot, query, historyModel, query.data)
             }
         })
 
-
-    }
-
-    categoryJoke(bot, query, historyModel, category) {
-        fetch(`https://api.chucknorris.io/jokes/random?category=${category}`)
-            .then(res => res.json())
-            .then(json => {
-                bot.editMessageText(json.value, {
-                    chat_id: query.message.chat.id,
-                    message_id: query.message.message_id,
-                    parse_mode: 'markdown',
-                    reply_markup: {
-                        inline_keyboard: [
-                            [
-                                {text: '◂ Back', callback_data: 'Back'}
-                            ]
-                        ]
-                    }
-                })
-                historyModel.create({chat_id: query.message.chat.id, value: json.value, updatedAt: Date.now()})
-                    .then(console.log)
-                    .catch(e => console.log(`DATABASE WRITE ERROR: ${e}`))
-            })
-    }
-
-    randomChosen(bot, query, historyModel) {
-        console.log('randomChosen entered')
-        fetch('https://api.chucknorris.io/jokes/random')
-            .then(res => res.json())
-            .then(json => {
-                bot.editMessageText(json.value, {
-                    chat_id: query.message.chat.id,
-                    message_id: query.message.message_id,
-                    parse_mode: 'markdown',
-                    reply_markup: {
-                        inline_keyboard: [
-                            [
-                                {text: '◂ Back', callback_data: 'Back'}
-                            ]
-                        ]
-                    }
-                })
-                historyModel.create({chat_id: query.message.chat.id, value: json.value, updatedAt: Date.now()})
-                    .then(console.log)
-                    .catch(e => console.log(`DATABASE WRITE ERROR: ${e}`))
-            })
-    }
-
-    mainMenuChosen(bot, query) {
-        bot.editMessageText(choose, {
-            chat_id: query.message.chat.id,
-            message_id: query.message.message_id,
-            parse_mode: 'markdown',
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        {text: 'Random', callback_data: 'Random'}
-                    ],
-                    [
-                        {text: 'Categories', callback_data: 'Categories'}
-                    ],
-                    [
-                        {text: 'History', callback_data: 'History'}
-                    ]
-                ]
-            }
-        })
-    }
-
-    historyChosen(bot, query, historyModel) {
-        historyModel.find({chat_id: query.message.chat.id}).sort([['updatedAt', 'descending']]).limit(10).exec().then(arr => {
-            bot.editMessageText(`Here is last 10 Chuck Norris jokes:\n${this.generateMappedMessage(...arr)}`, {
-                chat_id: query.message.chat.id,
-                message_id: query.message.message_id,
+        bot.onText(/\/start/gm, msg => {
+            bot.sendMessage(msg.chat.id, this.getMainMenuText(), {
                 reply_markup: {
-                    inline_keyboard: [
-                        [
-                            {text: '◂ Back', callback_data: 'Back'}
-                        ]
-                    ]
+                    inline_keyboard: this.getMainMenuInlineKeyboard()
                 }
             })
         })
+
+        bot.on('message', msg => {
+            bot.deleteMessage(msg.chat.id, msg.message_id)
+        })
     }
 
-
-    generateMappedMessage(...args) {
-        return args.reduceRight((acc, curr) => {
-            return acc + `\n${curr.value}\n`
-        }, '\n')
+    randomChosen(bot, query, historyModel): void {
+        this.getJoke('https://api.chucknorris.io/jokes/random', bot, query, historyModel)
     }
 
-    generateInlineCategories(array) {
-        const result = []
-        for (let i = 0; i < array.length; i += 2) {
-            result.push([{text: array[i], callback_data: array[i]}, {text: array[i + 1], callback_data: array[i + 1]}])
-        }
-        return result
-    }
-
-    categoriesChosen(bot, query) {
+    categoriesChosen(bot, query): void {
         fetch('https://api.chucknorris.io/jokes/categories')
             .then(res => res.json())
             .then(json => {
@@ -151,4 +67,98 @@ export class AppService {
             })
     }
 
+    historyChosen(bot, query, historyModel): void {
+        this.getLastCollectionObjects(query, historyModel, 10).then(arr => {
+            bot.editMessageText(`Here is last 10 Chuck Norris jokes:\n${this.generateMappedMessage(...arr)}`, {
+                chat_id: query.message.chat.id,
+                message_id: query.message.message_id,
+                reply_markup: {
+                    inline_keyboard: this.getJokeInlineKeyboard()
+                }
+            })
+        }).catch(e => console.error(`ERROR: got error sending history message: ${e}`))
+    }
+
+    categoryJokeChosen(bot, query, historyModel, category): void {
+        this.getJoke(`https://api.chucknorris.io/jokes/random?category=${category}`, bot, query, historyModel)
+    }
+
+    mainMenuChosen(bot, query): void {
+        bot.editMessageText(this.getMainMenuText(), {
+            chat_id: query.message.chat.id,
+            message_id: query.message.message_id,
+            reply_markup: {
+                inline_keyboard: this.getMainMenuInlineKeyboard()
+            }
+        })
+    }
+
+    getJoke(url, bot, query, historyModel): void {
+        try {
+            fetch(url)
+                .then(res => res.json())
+                .then(json => {
+                    bot.editMessageText(json.value, {
+                        chat_id: query.message.chat.id,
+                        message_id: query.message.message_id,
+                        reply_markup: {
+                            inline_keyboard: this.getJokeInlineKeyboard()
+                        }
+                    })
+                    this.pushCollection(bot, query, historyModel, json)
+                })
+        } catch (e) {
+            console.error(`ERROR: error fetching data: ${e}`)
+        }
+    }
+
+    pushCollection(bot, query, historyModel, json): void {
+        historyModel.create({chat_id: query.message.chat.id, value: json.value, updatedAt: Date.now()})
+            .catch(e => console.error(`DATABASE WRITE ERROR: ${e}`))
+    }
+
+    async getLastCollectionObjects(query, historyModel, amount: number): Promise<Array<object>> {
+        return await historyModel.find({chat_id: query.message.chat.id}).sort([['updatedAt', 'descending']]).limit(amount).exec().catch(e => console.error(`ERROR: database error getting last ${amount} elements from collection: ${e}`))
+    }
+
+    getMainMenuText(): string {
+        return 'Hello I\'m ChuckNorrisBot. I manage to spread jokes about Chuck.\n\nPress a button and have fun:\nRandom - for a random joke\nCategoties - to choose thematic of a joke\nHistory - for your recent jokes'
+    }
+
+    generateInlineCategories(array: Array<string>): Array<object> {
+        let result: Array<Array<object>> = []
+        for (let i = 0; i < array.length; i += 2) {
+            result.push([{text: array[i], callback_data: array[i]}, {text: array[i + 1], callback_data: array[i + 1]}])
+        }
+        result.push(this.getJokeInlineKeyboard()[0])
+        return result
+    }
+
+    generateMappedMessage(...args): string {
+        return args.reduce((acc, curr) => {
+            return acc + `\n${curr.value}\n`
+        }, '\n')
+    }
+
+    getMainMenuInlineKeyboard(): Array<object> {
+        return [
+            [
+                {text: 'Random', callback_data: 'Random'}
+            ],
+            [
+                {text: 'Categories', callback_data: 'Categories'}
+            ],
+            [
+                {text: 'History', callback_data: 'History'}
+            ]
+        ]
+    }
+
+    getJokeInlineKeyboard(): Array<Array<object>> {
+        return [
+            [
+                {text: '◂ Back', callback_data: 'Back'}
+            ]
+        ]
+    }
 }
