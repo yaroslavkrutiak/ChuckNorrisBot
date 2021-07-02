@@ -26,10 +26,10 @@ The task will be to create a telegram bot that will show the user the jokes of C
 2. Create a *source* folder to contain your code.
 3. In the *source* directory, please create an NestJS app that accomplishes the following:
     - Connect to the [Telegram Bot API](https://core.telegram.org/bots/api) (to do this, you can use libraries that you can find on the Internet)
-    - In the telegram bot you will need to create three buttons (random, categories and history) using one time keyboard:
+    - In the telegram bot you will need to create three buttons (random, categories and historySchema) using one time keyboard:
         1. random - Using [Api with Chuck Norris jokes](https://api.chucknorris.io) to show the user a random joke.
         2. categories - Show the user all categories of Chuck Norris jokes as inline buttons, at the click of a button, show a random joke from the selected category.
-        3. history - When the user clicks this button show the last 10 jokes he has seen before. To do this, you need to save all the jokes that were shown to the user through the random button or through a certain category in the MongoDB database.
+        3. historySchema - When the user clicks this button show the last 10 jokes he has seen before. To do this, you need to save all the jokes that were shown to the user through the random button or through a certain category in the MongoDB database.
 
 **DEADLINE: 3 days**
 
