@@ -15,7 +15,7 @@ export class AppService {
         const TelegramBot = require('node-telegram-bot-api')
         const token: string = process.env.TOKEN;
         const bot = new TelegramBot(token, {polling: {autoStart: true}});
-        setTimeout(() => console.log(`Connect bot via ${process.env.BOT_LINK}`), 2000)
+        setImmediate(() => console.log(`Connect bot via ${process.env.BOT_LINK}`))
 
         bot.on('callback_query', query => {
             switch (query.data) {
